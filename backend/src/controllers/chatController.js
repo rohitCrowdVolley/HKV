@@ -316,7 +316,8 @@ exports.handleChatRequest = async (req, res) => {
 
     if (!message) return res.status(400).json({ error: "Missing message" });
 
-    let targetLanguage = (language || "en").split(/[-_]/)[0].toLowerCase();
+    // let targetLanguage = (language || "en").split(/[-_]/)[0].toLowerCase();
+    let targetLanguage = "de";
     console.log("🟢 Incoming message:", message);
     console.log("🟢 Target language:", targetLanguage);
 

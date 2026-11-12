@@ -16,8 +16,8 @@
   iframe.style.height = "100%";
   iframe.style.zIndex = "9999";
   iframe.style.border = "none";
-  iframe.style.backdropFilter = "blur(2px)";
-  iframe.style.webkitBackdropFilter = "blur(2px)";
+  iframe.style.backgroundColor = "#171a1c33"; 
+  iframe.allowTransparency = true; 
   chatContainer.appendChild(iframe);
   const target = document.querySelector(".chatbot_section");
   target.appendChild(chatContainer);

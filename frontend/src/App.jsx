@@ -31,6 +31,24 @@ function App() {
     }
   }, [messages]);
 
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (popupRef.current?.contains(event.target)) return;
+
+      setIsOpen(false);
+      setIsExpanded(false);
+      window.parent.postMessage("closeChatbot", "*");
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -85,22 +103,22 @@ function App() {
       .replace(
         /\[(.*?)\]\((https?:\/\/[^\s)]+)\)/g,
         `
-      <div class="link-header inline-link">
-        <a href="$2" target="_blank" rel="noopener noreferrer">
-          $1
-        </a>
-      </div>
-      `
+    <div class="link-header inline-link">
+      <a href="$2" target="_blank" rel="noopener noreferrer">
+        $1
+      </a>
+    </div>
+    `
       )
 
       .replace(
         /(?:^|\n)(\d+)\.\s([\s\S]*?)(?=\n\d+\.\s|$)/g,
         (match, num, content) => `
-        <div class="feature-item">
-          <div class="feature-number">${num}</div>
-          <div class="feature-text">${content.trim()}</div>
-        </div>
-      `
+      <div class="feature-item">
+        <div class="feature-number">${num}</div>
+        <div class="feature-text">${content.trim()}</div>
+      </div>
+    `
       )
       ;
   };
@@ -141,7 +159,11 @@ function App() {
         );
       }
 
-      const thankYouMessage = `Thanks for reaching out. I see you have an interest in learning more about Timeline. If you have specific questions or a project in mind, our consultants would be more than happy to assist you directly. They can provide personalized guidance based on your needs. Again, I have your email, and a consultant will follow up with you shortly. In the meantime, here are some resources that might be of interest to you: If there’s anything specific you’d like to discuss, please let me know!`;
+      const thankYouMessage = `Vielen Dank für Ihre Kontaktaufnahme. Ich sehe, dass Sie mehr über Timeline erfahren möchten. Wenn Sie konkrete Fragen oder bereits ein Projekt im Sinn haben, stehen Ihnen unsere Berater gerne persönlich zur Verfügung. Sie können Sie individuell beraten und auf Ihre Bedürfnisse eingehen.
+
+Ich habe Ihre E-Mail-Adresse bereits erhalten, und ein Berater wird sich in Kürze bei Ihnen melden. In der Zwischenzeit finden Sie hier einige hilfreiche Ressourcen, die für Sie interessant sein könnten.
+
+Wenn Sie ein bestimmtes Anliegen besprechen möchten, lassen Sie es mich gerne wissen!`;
 
       setMessages((prev) => [
         ...prev,
@@ -168,15 +190,10 @@ function App() {
           <div className="chat-header">
             <div className="chat-header-left">
               <span className="chat-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <path d="M19.04 4.48C20.2282 4.48 21.3677 4.952 22.2078 5.79216C23.048 6.63232 23.52 7.77183 23.52 8.96C23.52 7.77183 23.992 6.63232 24.8322 5.79216C25.6723 4.952 26.8118 4.48 28 4.48C26.8118 4.48 25.6723 4.008 24.8322 3.16784C23.992 2.32768 23.52 1.18817 23.52 0C23.52 1.18817 23.048 2.32768 22.2078 3.16784C21.3677 4.008 20.2282 4.48 19.04 4.48ZM13.44 28C13.44 24.4355 14.856 21.017 17.3765 18.4965C19.897 15.976 23.3155 14.56 26.88 14.56C23.3155 14.56 19.897 13.144 17.3765 10.6235C14.856 8.10302 13.44 4.68451 13.44 1.12C13.44 4.68451 12.024 8.10302 9.50351 10.6235C6.98303 13.144 3.56451 14.56 0 14.56C3.56451 14.56 6.98303 15.976 9.50351 18.4965C12.024 21.017 13.44 24.4355 13.44 28Z" fill="url(#paint0_linear_1_360)" />
-                  <defs>
-                    <linearGradient id="paint0_linear_1_360" x1="2.70703" y1="7.35" x2="23.539" y2="22.015" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#FC7723" />
-                      <stop offset="1" stopColor="#CE44FF" />
-                    </linearGradient>
-                  </defs>
-                </svg> <span className="btn-gradient-text">Let’s Find the Right Solution for You</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <path d="M21.28 6.02634C22.5248 6.02634 23.7186 6.52082 24.5987 7.40099C25.4789 8.28116 25.9734 9.47493 25.9734 10.7197C25.9734 9.47493 26.4678 8.28116 27.348 7.40099C28.2282 6.52082 29.422 6.02634 30.6667 6.02634C29.422 6.02634 28.2282 5.53187 27.348 4.6517C26.4678 3.77152 25.9734 2.57776 25.9734 1.33301C25.9734 2.57776 25.4789 3.77152 24.5987 4.6517C23.7186 5.53187 22.5248 6.02634 21.28 6.02634ZM15.4134 30.6663C15.4134 26.9321 16.8968 23.3508 19.5373 20.7103C22.1778 18.0698 25.7591 16.5863 29.4934 16.5863C25.7591 16.5863 22.1778 15.1029 19.5373 12.4624C16.8968 9.82189 15.4134 6.24059 15.4134 2.50634C15.4134 6.24059 13.9299 9.82189 11.2894 12.4624C8.64892 15.1029 5.06762 16.5863 1.33337 16.5863C5.06762 16.5863 8.64892 18.0698 11.2894 20.7103C13.9299 23.3508 15.4134 26.9321 15.4134 30.6663Z" fill="#171A1C" />
+                </svg>
+                <span className="btn-gradient-text">Lassen Sie uns die passende Lösung für Sie finden.</span>
               </span>
             </div>
 
@@ -205,8 +222,8 @@ function App() {
           </div>
 
           <p className="chat-subtitle">
-            Share a bit about your company, your project and your requirements —
-            our AI will assist you to find the perfect solution.
+            Erzählen Sie uns ein wenig über Ihr Unternehmen, Ihr Projekt und Ihre Anforderungen –
+            unsere KI hilft Ihnen dabei, die perfekte Lösung zu finden.
           </p>
 
           <div className="chat-messages" ref={messagesContainerRef}>
@@ -221,7 +238,7 @@ function App() {
                   dangerouslySetInnerHTML={{ __html: formatMessage(msg.text) }}
                 />
 
-                {i === messages.length - 1 &&
+                 {/* {i === messages.length - 1 &&
                   showContactForm &&
                   msg.sender === "bot" && (
                     <form
@@ -234,14 +251,14 @@ function App() {
                       <div className="contact-form-fields">
                         <input
                           type="text"
-                          placeholder="Your Name"
+                          placeholder="Ihr Name"
                           value={userName}
                           onChange={(e) => setUserName(e.target.value)}
                           required
                         />
                         <input
                           type="email"
-                          placeholder="Your Email"
+                          placeholder="Ihre E-Mail-Adresse"
                           value={userEmail}
                           onChange={(e) => setUserEmail(e.target.value)}
                           required
@@ -251,7 +268,7 @@ function App() {
                         </button>
                       </div>
                     </form>
-                  )}
+                  )} */}
                 {msg.links && msg.links.length > 0 && (
                   <div
                     className={`links-container ${msg.links.length > 4 ? "scrollable" : ""
@@ -286,7 +303,7 @@ function App() {
             ))}
 
             {loading && (
-              <div className="chat-bubble bot-bubble">Typing...</div>
+              <div className="chat-bubble bot-bubble">Tippen...</div>
             )}
           </div>
 
@@ -295,7 +312,7 @@ function App() {
               <div className="chat-input-wrapper">
                 <input
                   type="text"
-                  placeholder="Type here"
+                  placeholder="Hier eingeben"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage()}
@@ -307,14 +324,8 @@ function App() {
                 </button>
               </div>
               <button className="icon-btn attach-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="18" viewBox="0 0 17 18" fill="none">
-                  <path d="M10.47 4.53553L5.0533 9.9522C4.72178 10.2837 4.53553 10.7334 4.53553 11.2022C4.53553 11.671 4.72178 12.1207 5.0533 12.4522C5.38482 12.7837 5.83446 12.97 6.3033 12.97C6.77214 12.97 7.22178 12.7837 7.5533 12.4522L12.97 7.03553C13.633 6.37249 14.0055 5.47322 14.0055 4.53553C14.0055 3.59785 13.633 2.69858 12.97 2.03553C12.3069 1.37249 11.4076 1 10.47 1C9.53229 1 8.63301 1.37249 7.96997 2.03553L2.5533 7.4522C1.55874 8.44676 1 9.79568 1 11.2022C1 12.6087 1.55874 13.9576 2.5533 14.9522C3.54786 15.9468 4.89678 16.5055 6.3033 16.5055C7.70982 16.5055 9.05874 15.9468 10.0533 14.9522L15.47 9.53553" stroke="url(#paint0_linear_1_377)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <defs>
-                    <linearGradient id="paint0_linear_1_377" x1="2.39895" y1="5.07019" x2="13.6457" y2="12.4588" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#FC7723" />
-                      <stop offset="1" stopColor="#CE44FF" />
-                    </linearGradient>
-                  </defs>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M12.5 5.83339L7.08333 11.2501C6.75181 11.5816 6.56556 12.0312 6.56556 12.5001C6.56556 12.9689 6.75181 13.4185 7.08333 13.7501C7.41485 14.0816 7.86449 14.2678 8.33333 14.2678C8.80217 14.2678 9.25181 14.0816 9.58333 13.7501L15 8.33339C15.663 7.67034 16.0355 6.77107 16.0355 5.83339C16.0355 4.8957 15.663 3.99643 15 3.33339C14.337 2.67034 13.4377 2.29785 12.5 2.29785C11.5623 2.29785 10.663 2.67034 10 3.33339L4.58333 8.75005C3.58877 9.74461 3.03003 11.0935 3.03003 12.5001C3.03003 13.9066 3.58877 15.2555 4.58333 16.2501C5.57789 17.2446 6.92681 17.8034 8.33333 17.8034C9.73985 17.8034 11.0888 17.2446 12.0833 16.2501L17.5 10.8334" stroke="#171A1C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </button>
             </div>

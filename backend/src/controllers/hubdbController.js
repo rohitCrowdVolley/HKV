@@ -23,40 +23,30 @@ async function getRowByExport() {
 
 const getNames = (items = []) => items.map(item => item.name).filter(Boolean);
 
-function matchesCourse(course, searchText = "") {
-    if (!searchText) return true;
+const strip = (s) => String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+const norm = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
 
-    const words = searchText
-        .toLowerCase()
-        .split(/\W+/)
-        .filter(w => w.length > 2);
+function scoreCourse(course, searchText) {
+    const q = norm(searchText);
+    const title = norm(course.title);
+    const words = q.split(/[^\p{L}\p{N}]+/u).filter(w => w.length > 2);
+    if (!words.length) return 0;
 
-    const fields = [
-        course.title,
-        course.description,
-        course.url,
-        course.detailsLink,
-        course.level,
-        course.format,
-        course.subsidy,
-        course.businessUnit,
-        course.currency_symbol,
-        course.price,
-        course.priceSectionSubTitle,
-        course.date,
-        course.timeHours,
-        course.registerUrl,
-        ...course.course_tag,
-        ...course.more,
-        ...course.branchName,
-        ...course.nextIntake,
-        ...course.detailsTabList,
-        ...course.authors,
-    ].map(f => (f || "").toString().toLowerCase());
+    let score = 0;
+    if (title === q) score += 1000;                       // exact title
+    else if (title.includes(q) || q.includes(title)) score += 500;
 
-    return words.some(word =>
-        fields.some(field => field.includes(word))
-    );
+    const meta = norm([...course.course_tag, ...course.more, ...course.branchName,
+    ...course.authors, course.businessUnit, course.level, course.format].join(" "));
+    const rest = norm([strip(course.description), course.detailsLink,
+    ...course.nextIntake, ...course.detailsTabList].join(" "));
+
+    for (const w of words) {
+        if (title.includes(w)) score += 10;
+        if (meta.includes(w)) score += 3;
+        if (rest.includes(w)) score += 1;
+    }
+    return score;
 }
 
 async function getNextIntakeData(searchText = "") {
@@ -64,6 +54,7 @@ async function getNextIntakeData(searchText = "") {
         const data = await getRowByExport();
 
         const result = [];
+        const all = [];
 
         for (const row of data.results) {
 
@@ -104,16 +95,20 @@ async function getNextIntakeData(searchText = "") {
                 authors
             };
 
-            if (!matchesCourse(course, searchText)) {
-                continue;
-            }
-
-            result.push(course);
+            all.push(course);
+            const score = scoreCourse(course, searchText);
+            if (score > 0) scored.push({ course, score });
         }
-        return result;
+
+        scored.sort((a, b) => b.score - a.score);
+
+        if (scored.length && scored[0].score >= 500) return [scored[0].course];
+        const top = scored.slice(0, 3).map(s => s.course);
+        return top.length ? top : all.slice(0, 20);
 
     } catch (error) {
         console.error(error);
+        return [];
     }
 }
 

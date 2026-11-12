@@ -28,7 +28,7 @@
 }
 
 .btn-gradient-text {
-  background: linear-gradient(125.14deg, #FC7723 16.52%, #CE44FF 81.82%);
+  background: #000;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -47,12 +47,13 @@
   left: 50%;
   transform: translateX(-50%);
   border: 1px solid transparent;
-  border-radius: 32px;
+  border-radius: 40px;
   overflow: hidden;
   z-index: 9999;
   animation: slideUp 0.3s ease;
-  background: linear-gradient(#FFF7ED, #FFF7ED) padding-box, linear-gradient(125.14deg, #FC7723 16.52%, #CE44FF 81.82%) border-box;
-  box-shadow: 0px 40px 32px -32px #2DAAAD52;
+  background: linear-gradient(90.26deg, #DFF2F6 0.22%, #EDF7F3 28.93%, #FDE8EA 69.62%, #FCF4E8 99.77%) padding-box, linear-gradient(90deg, #33C6D3 0%, #4AC195 33.17%, #FF727F 65.87%, #F9B035 100%) border-box;
+  box-shadow: 0px 34px 44px -20px #73828C26;
+
   padding: 20px;
 }
 
@@ -70,7 +71,7 @@
 
 /* === Header === */
 .chat-header {
-  color: #333;
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -95,17 +96,17 @@
   align-items: center;
   display: flex;
   gap: 8px;
-  line-height: 100%;
-  font-family: "Baloo 2", sans-serif;
+  line-height: 140%;
+  font-family: "Montserrat", sans-serif;
 }
 
-/* === Expand / Close Buttons === */
+
 .expand-btn,
 .close-btn {
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: #ffd5a8;
+  background: #FFFFFF80;
   color: #343A40;
   border: none;
   cursor: pointer;
@@ -117,7 +118,7 @@
 
 .expand-btn:hover,
 .close-btn:hover {
-  background: #ffcc95;
+  background: #FFFFFF80;
   color: #000;
   transform: scale(1.05);
 }
@@ -128,10 +129,10 @@
   font-size: 14px;
   color: #343a40;
   margin: 0;
-  line-height: 100%;
+  line-height: 140%;
   font-weight: 500;
   display: inline-block;
-  font-family: "Albert Sans", sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 .chat-messages {
@@ -139,7 +140,7 @@
   overflow-y: auto;
   max-height: 60vh;
   padding: 16px 18px;
-  background: #fff7ed;
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -158,8 +159,8 @@
   max-width: 85%;
   word-wrap: break-word;
   animation: fadeIn 0.25s ease;
-  font-family: "Albert Sans", sans-serif;
-  font-weight: 600;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
   color: #343A40;
 }
 
@@ -190,6 +191,8 @@
 .bot-message-content {
   display: flex;
   flex-direction: column;
+  color: #000;
+  line-height: 140%;
   gap: 10px;
 }
 
@@ -207,9 +210,10 @@
 }
 
 .feature-text {
-  color: #343A40;
+  color: #000;
   font-size: 14px;
-  line-height: 120%;
+  font-weight: 400;
+  line-height: 140%;
   width: 100%;
   line-break: anywhere;
 }
@@ -274,8 +278,8 @@
   display: flex;
   align-items: center;
   border: 1px solid transparent;
-  border-radius: 16px;
-  padding: 7px 10px;
+  border-radius: 27px;
+  padding: 6px 6px 6px 16px;
   background: linear-gradient(#fff, #fff) padding-box, linear-gradient(125.14deg, #FC7723 16.52%, #CE44FF 81.82%) border-box;
   gap: 8px;
 }
@@ -289,23 +293,23 @@
   font-weight: 600;
   line-height: 100%;
   color: #363c42;
-  font-family: "Albert Sans", sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 .icon-btn {
   border: none;
   cursor: pointer;
   padding: 7.5px;
-  background: #F2EFE2;
+  background: #FFFFFF;
   border-radius: 16px;
 }
 
 .send-btn {
-  border-radius: 12px;
-  width: 32px;
-  height: 32px;
+  border-radius: 40px;
+  width: 40px;
+  height: 40px;
   color: #fff;
-  background: linear-gradient(125.14deg, #FC7723 16.52%, #CE44FF 81.82%);
+  background: #171A1C;
 }
 
 .attach-btn svg {
@@ -321,7 +325,7 @@
 }
 
 .inline-contact-form::before {
-  content: "👇 Quick Contact Details";
+  content: "👇 Kurze Kontaktinformationen";
   display: block;
   font-size: 14px;
   color: #343A40;
@@ -340,7 +344,7 @@
   padding: 10px 12px;
   border: 1px solid #ffd7b5;
   border-radius: 8px;
-  font-family: "Albert Sans", sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 .contact-form-fields .send-btn {
@@ -390,7 +394,7 @@
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  background: #FFF7ED;
+  background: linear-gradient(90.26deg, #DFF2F6 0.22%, #EDF7F3 28.93%, #FDE8EA 69.62%, #FCF4E8 99.77%);
   padding: 0;
 }
 
@@ -427,15 +431,10 @@
 
 .chat-popup.fullscreen .chat-input-wrapper {
   border: 1px solid #FFB772;
-  border-radius: 12px;
 }
 
 .chat-popup.fullscreen .chat-input-wrapper input::placeholder {
   color: #D5C49C;
-}
-
-.chat-popup.fullscreen .chat-input-wrapper .send-btn {
-  background: #FC7723;
 }
 
 .chat-popup.fullscreen .chat-input-row {
@@ -443,7 +442,7 @@
 }
 
 .chat-popup.fullscreen .attach-btn {
-  background: #FFD5A9;
+  background: #FFFFFF;
   width: 40px;
   height: 40px;
 }
