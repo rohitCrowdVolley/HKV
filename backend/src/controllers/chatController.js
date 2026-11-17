@@ -383,9 +383,8 @@ exports.handleChatRequest = async (req, res) => {
 
     // Step 4️⃣ — GPT response
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-6-luna",
       messages,
-      max_tokens: 600,
     });
 
     const reply = completion.choices[0]?.message?.content?.trim() || "No response";

@@ -1,21 +1,65 @@
+const HUBDB_TABLE_ID = "1246109892";
+const HUBDB_INTAKE_TABLE_ID = "2379830480";
 
 
-async function getRowByExport() {
+async function getAllRow(hubdbTableId = HUBDB_TABLE_ID, param = { active: true, outdated: null }) {
+    let allRows = [];
+    let after = null;
 
-    let url = `https://api.hubapi.com/cms/hubdb/2026-03/tables/1246109892/rows`;
-
-
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${process.env.HUBSPOT_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
+    do {
+        const params = new URLSearchParams({ limit: "100" });
+        if (param.active == true) {
+            params.set("active", param.active);
         }
-    });
+        if (param.outdated == false) {
+            params.set("outdated", param.outdated);
+        }
+
+        if (after) { params.set("after", after); }
+
+        const response = await fetch(`https://api.hubapi.com/cms/hubdb/2026-03/tables/${hubdbTableId}/rows?${params}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${process.env.HUBSPOT_ACCESS_TOKEN}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(
+                `HubDB fetch error ${response.status}: ${err}`
+            );
+        }
+
+        const data = await response.json();
+
+        allRows.push(...(data.results || []));
+
+        after = data.paging?.next?.after || null;
+
+    } while (after);
+
+    console.log("Total HubDB rows fetched:", allRows.length);
+
+    return allRows;
+}
+
+async function getRowById(rowId) {
+
+    const response = await fetch(
+        `https://api.hubapi.com/cms/hubdb/2026-03/tables/${HUBDB_INTAKE_TABLE_ID}/rows/${rowId}`,
+        {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${process.env.HUBSPOT_ACCESS_TOKEN}`,
+                "Content-Type": "application/json"
+            }
+        }
+    );
 
     if (!response.ok) {
-        const err = await response.text();
-        throw new Error(`Update error ${response.status}: ${err}`);
+        throw new Error(`Failed to fetch row ${rowId}`);
     }
 
     return await response.json();
@@ -23,88 +67,128 @@ async function getRowByExport() {
 
 const getNames = (items = []) => items.map(item => item.name).filter(Boolean);
 
-const strip = (s) => String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
-const norm = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+function formatTimestamp(timestamp, includeTime = false) {
+    if (!timestamp) return '';
 
-function scoreCourse(course, searchText) {
-    const q = norm(searchText);
-    const title = norm(course.title);
-    const words = q.split(/[^\p{L}\p{N}]+/u).filter(w => w.length > 2);
-    if (!words.length) return 0;
+    const date = new Date(Number(timestamp));
+    if (isNaN(date.getTime())) return '';
 
-    let score = 0;
-    if (title === q) score += 1000;                       // exact title
-    else if (title.includes(q) || q.includes(title)) score += 500;
-
-    const meta = norm([...course.course_tag, ...course.more, ...course.branchName,
-    ...course.authors, course.businessUnit, course.level, course.format].join(" "));
-    const rest = norm([strip(course.description), course.detailsLink,
-    ...course.nextIntake, ...course.detailsTabList].join(" "));
-
-    for (const w of words) {
-        if (title.includes(w)) score += 10;
-        if (meta.includes(w)) score += 3;
-        if (rest.includes(w)) score += 1;
-    }
-    return score;
+    return includeTime ? date.toISOString() : date.toISOString().split('T')[0];
 }
 
-async function getNextIntakeData(searchText = "") {
+async function getDurchfuhrungenData() {
     try {
-        const data = await getRowByExport();
+        const data = await getAllRow(HUBDB_INTAKE_TABLE_ID, { active: false, outdated: false });
+        const result = [];
+
+        for (const row of data) {
+
+            result.push({
+                id: row.id,
+                standort: row.values.name ?? null,
+                uuid: row.values.uuid ?? null,
+                pk: row.values.pk ?? null,
+                price: row.values.price ?? null,
+                start_date: formatTimestamp(row.values.start_date) ?? null,
+                location: row.values.name ?? null,
+                seats: row.values.event_open ?? null,
+                duration: row.values.duration ?? null,
+                register_url: row.values.register_url ?? null,
+                notification: row.values.notification.label ?? null,
+                bezeichnung: row.values.label ?? null,
+                kurzbezeichnung: row.values.abbreviation ?? null,
+                zeiten: row.values.times ?? null,
+                ende: formatTimestamp(row.values.last_course_date) ?? null,
+                publication_internet_from: formatTimestamp(row.values.publication_internet_from, true) ?? null,
+                publication_internet_till: formatTimestamp(row.values.publication_internet_till, true) ?? null,
+                registration_internet_from: formatTimestamp(row.values.registration_internet_from, true) ?? null,
+                registration_internet_till: formatTimestamp(row.values.registration_internet_till, true) ?? null,
+                participation_min: row.values.participation_min ?? 0,
+                lehrmethode: row.values.relevent_teaching_method_unique_id ?? null,
+                orange_light: row.values.orange_light ?? null,
+                execution_guaranteed: row.values.execution_guaranteed == 1,
+                relreservation_date_from: formatTimestamp(row.values.relreservation_date_from, true) ?? null,
+                relreservation_date_till: formatTimestamp(row.values.relreservation_date_till, true) ?? null,
+                registration: row.values.registration ?? 0,
+                typ: row.values.relevent_type_label ?? null,
+                teaching_method_label: row.values.relevent_teaching_method_label ?? null
+
+            });
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
+
+async function getNextIntakeData() {
+    try {
+        const data = await getAllRow();
+        const dataWithIntakeInformation = await getDurchfuhrungenData();
 
         const result = [];
         const all = [];
 
-        for (const row of data.results) {
+        for (const row of data) {
+            let nextIntake = (row.values.next_intake || []).map(x => x.id);
+            let informationalEvents = (row.values.informationalEvents || []).map(x => x.id);
+            const intakeInformation = dataWithIntakeInformation.filter(intake => nextIntake.includes(intake.id));
+            const intakeInformationData = dataWithIntakeInformation.filter(event => informationalEvents.includes(event.id));
+            // let intakeInformation = [];
+            // let intakeInformationData = [];
 
-            const nextIntake = (row.values.next_intake || []).map(x => x.name);
-            const detailsTabList = (row.values.details_tab_list || []).map(x => x.name);
-            const authors = (row.values.author || []).map(x => x.name);
+            // for (const id of nextIntake) {
+            //     const intakeRow = await getDurchfuhrungenData(id);
+
+            //     if (intakeRow) {
+            //         intakeInformation.push(intakeRow);
+            //     }
+            // }
+
+            // // Fetch Informational Events rows sequentially
+            // for (const id of informationalEvents) {
+            //     const eventRow = await getDurchfuhrungenData(id);
+
+            //     if (eventRow) {
+            //         intakeInformationData.push(eventRow);
+            //     }
+            // }
 
             const course = {
                 rowId: row.id,
-                url: `https://145914055.hs-sites-eu1.com/all-courses/${row.path}`,
-                course_tag: getNames(row.values.course_tag),
-                level: row.values.level?.label ?? null,
-                format: row.values.course_format?.label ?? null,
-                subsidy: row.values.subsidy?.label ?? null,
-                more: getNames(row.values.more),
+                title: row.values?.title,
+                url: `https://www.hkv.ch/${row.values?.course_details}`,
+                active: row.values?.active == 1 ?? false,
+                businessUnit: getNames(row.values?.business_unit),
+                course_tag: getNames(row.values?.course_tag),
+                kursformat: getNames(row.values?.course_format),
+                subsidy: row.values?.subsidy?.label ?? null,
+                categories: getNames(row.values.more),
                 branchName: getNames(row.values.branch_name),
-
-                video: row.values.video?.url ?? null,
-                image: row.values.courses_image?.url ?? null,
-                wantOverlayImage: row.values.want_overlay_image ?? null,
-                overlayImage: row.values.overlay_image?.url ?? null,
-                title: row.name,
+                courses_image: row.values.courses_image?.url ?? null,
                 description: row.values.content,
-                detailsLink: row.path,
-                currency_symbol: row.values.currency_symbols?.name ?? null,
+                detailsLink: row.values?.course_details,
                 price: row.values.price ?? null,
-                priceSectionSubTitle: row.values.course_details_price_info ?? null,
-                date: row.values.start_date
+                start_date: row.values.start_date
                     ? new Date(row.values.start_date).toISOString()
                     : null,
-                timeHours: row.values.time ?? null,
-                registerUrl: row.values.register_url ?? null,
-                showCourseDetailsButtons: row.values.course_details_pop_dailog ?? null,
-                businessUnit: row.values.business_unit?.label ?? null,
 
                 nextIntake,
-                detailsTabList,
-                authors
+                informationalEvents,
+                intakeInformation,
+                intakeInformationData
             };
 
             all.push(course);
-            const score = scoreCourse(course, searchText);
-            if (score > 0) scored.push({ course, score });
         }
 
-        scored.sort((a, b) => b.score - a.score);
+        console.log(all[11]);
 
-        if (scored.length && scored[0].score >= 500) return [scored[0].course];
-        const top = scored.slice(0, 3).map(s => s.course);
-        return top.length ? top : all.slice(0, 20);
+        return all;
 
     } catch (error) {
         console.error(error);
